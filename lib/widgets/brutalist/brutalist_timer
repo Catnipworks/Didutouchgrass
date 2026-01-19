@@ -1,0 +1,193 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+class BrutalistTimer extends StatefulWidget {
+  final int initialSeconds;
+  final String activityName;
+  final VoidCallback onTimerComplete;
+  final VoidCallback onStop;
+
+  const BrutalistTimer({
+    super.key,
+    required this.initialSeconds,
+    required this.activityName,
+    required this.onTimerComplete,
+    required this.onStop,
+  });
+
+  @override
+  State<BrutalistTimer> createState() => _BrutalistTimerState();
+}
+
+class _BrutalistTimerState extends State<BrutalistTimer> {
+  late int _remainingSeconds;
+  Timer? _timer;
+  bool _isRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.initialSeconds;
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _isRunning = true;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _stopTimer();
+          widget.onTimerComplete();
+          // Trigger notification here
+          _showCompletionNotification();
+        }
+      });
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _isRunning = false;
+  }
+
+  void _showCompletionNotification() {
+    // TODO: Integrate with flutter_local_notifications
+    // For now, this is a placeholder
+    print('NOTIFICATION: You touched grass. Welcome back.');
+  }
+
+  String _formatTime(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _stopTimer();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: const Color(0xFF2D3B2D),
+          width: 4.0,
+        ),
+        borderRadius: BorderRadius.circular(0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFF2D3B2D),
+            offset: Offset(10, 10),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Activity name
+          Text(
+            widget.activityName.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Courier Prime',
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF2D3B2D),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          // Timer display - large and bold
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
+            decoration: BoxDecoration(
+              color: const Color(0xFFC4F2BE),
+              border: Border.all(
+                color: const Color(0xFF2D3B2D),
+                width: 4.0,
+              ),
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Text(
+              _formatTime(_remainingSeconds),
+              style: const TextStyle(
+                fontFamily: 'Courier Prime',
+                fontSize: 72,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF2D3B2D),
+                letterSpacing: 2,
+                height: 1,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          // Status text
+          Text(
+            _remainingSeconds == 0 ? 'COMPLETE' : 'IN PROGRESS',
+            style: TextStyle(
+              fontFamily: 'Courier Prime',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: _remainingSeconds == 0 
+                ? const Color(0xFF2D3B2D) 
+                : const Color(0xFF2D3B2D).withOpacity(0.6),
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          // Stop button
+          GestureDetector(
+            onTap: () {
+              _stopTimer();
+              widget.onStop();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: const Color(0xFF2D3B2D),
+                  width: 4.0,
+                ),
+                borderRadius: BorderRadius.circular(0),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0xFF2D3B2D),
+                    offset: Offset(4, 4),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Text(
+                'STOP',
+                style: TextStyle(
+                  fontFamily: 'Courier Prime',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF2D3B2D),
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
