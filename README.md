@@ -1,16 +1,28 @@
-# flutter_cat
+# 🟩 DID U TOUCH GRASS?
+> **MADE BY AN ANALOG CAT IN A DIGITAL WORLD.**
 
-A new Flutter project.
+---
 
-## Getting Started
+## ⬛ WHAT IS THIS?
+A lo-fi utility for anyone finding their phone is taking more than it's giving. This app doesn't want you to stay. It wants you to leave.
 
-This project is a starting point for a Flutter application.
+## 🛠️ THE VIBE (NEO-BRUTALISM)
+- **HARD BORDERS:** 4px minimum.
+- **HARD SHADOWS:** No blur. Just depth.
+- **COLOR PALETTE:** - `Background`: #ebebeb
+  - `Accent`: #c4f2be (Grass Green)
+  - `Ink`: #2d3b2d
+- **FONTS:** Mono-spaced or Courier Prime.
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 GETTING STARTED
+1. **Clone it:** `git clone https://github.com/Catnipworks/Didutouchgrass.git`
+2. **Fetch dependencies:** `flutter pub get`
+3. **Run it:** `flutter run`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 📂 PROJECT STRUCTURE
+- `/lib`: The brain.
+- `/assets`: Lo-fi textures
+- `CLAUDE.md`: Memory bank for AI development.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+**BY CATNIP WORKS © 2026**
