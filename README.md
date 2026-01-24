@@ -4,7 +4,7 @@
 ---
 
 ## ⬛ WHAT IS THIS?
-A lo-fi utility for anyone finding their phone is taking more than it's giving. This app doesn't want you to stay. It wants you to leave.
+A lo-fi utility for anyone finding their phone takes more than it gives. This app doesn't want you to stay. It wants you to leave.
 
 ## 🛠️ THE VIBE (NEO-BRUTALISM)
 - **HARD BORDERS:** 4px minimum.
