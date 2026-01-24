@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:math' as math;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest_all.dart' as tzdata;
 
 class NotificationService {
   static const String _enabledKey = 'notifications_enabled';
@@ -19,8 +18,8 @@ class NotificationService {
 
   // Initialize notifications (call this in main.dart or app startup)
   static Future<void> initialize() async {
-    tzdata.initializeTimeZones();
-
+    // DON'T initialize timezones here - it's done in main.dart
+    
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -49,18 +48,16 @@ class NotificationService {
       },
     );
 
-    // Request permissions (iOS)
+    // Request permissions for Android 13+
     await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
   }
 
   // Check if notifications are enabled
   Future<bool> areNotificationsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_enabledKey) ?? false;
+    return prefs.getBool(_enabledKey) ?? true;
   }
 
   // Set notifications enabled/disabled
@@ -102,6 +99,8 @@ class NotificationService {
     await cancelReminder(); // Cancel any existing reminders first
 
     final now = tz.TZDateTime.now(tz.local);
+    print('🔔 Current time: $now');
+    
     tz.TZDateTime scheduledDate = tz.TZDateTime(
       tz.local,
       now.year,
@@ -114,7 +113,11 @@ class NotificationService {
     // If the time has already passed today, schedule for tomorrow
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
+      print('🔔 Time already passed, scheduling for tomorrow');
     }
+
+    print('🔔 Will notify at: $scheduledDate');
+    print('🔔 Frequency: $frequency');
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -123,11 +126,10 @@ class NotificationService {
           channelDescription: 'Reminders to touch grass',
           importance: Importance.high,
           priority: Priority.high,
-          sound: RawResourceAndroidNotificationSound('notification'),
+          playSound: true,
         );
 
     const DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
-      sound: 'notification.aiff',
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
@@ -147,10 +149,11 @@ class NotificationService {
         'tap to pick an activity',
         scheduledDate,
         notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'random_activity',
       );
+      print('✅ Notification scheduled successfully!');
     } else if (frequency == 'weekdays') {
       // Schedule for weekdays only (Monday-Friday)
       for (int i = 0; i < 7; i++) {
@@ -163,12 +166,13 @@ class NotificationService {
             'tap to pick an activity',
             nextDate,
             notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
             payload: 'random_activity',
           );
         }
       }
+      print('✅ Weekday notifications scheduled successfully!');
     } else if (frequency == 'random') {
       // Schedule 5 random times throughout the day between 9 AM and 9 PM
       final random = math.Random();
@@ -191,10 +195,11 @@ class NotificationService {
           'tap to pick an activity',
           randomDate,
           notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           payload: 'random_activity',
         );
       }
+      print('✅ Random notifications scheduled successfully!');
     }
 
     print(

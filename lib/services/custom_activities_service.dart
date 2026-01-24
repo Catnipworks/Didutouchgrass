@@ -4,6 +4,8 @@ import '../models/activity.dart';
 
 class CustomActivitiesService {
   static const String _customActivitiesKey = 'custom_activities';
+  static const String _activityOrderKey = 'activity_order';
+  static const String _removedActivitiesKey = 'removed_activities';
 
   // Load custom activities
   Future<List<Activity>> loadCustomActivities() async {
@@ -73,5 +75,71 @@ class CustomActivitiesService {
       activities[index] = activity;
       await saveCustomActivities(activities);
     }
+  }
+
+  // Get stored activity order (list of titles)
+  Future<List<String>> getActivityOrder() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final orderJson = prefs.getString(_activityOrderKey);
+      if (orderJson != null) {
+        final List<dynamic> decoded = json.decode(orderJson);
+        return decoded.cast<String>();
+      }
+    } catch (e) {
+      print('Error loading activity order: $e');
+    }
+    return [];
+  }
+
+  // Save activity order
+  Future<void> setActivityOrder(List<String> order) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_activityOrderKey, json.encode(order));
+    } catch (e) {
+      print('Error saving activity order: $e');
+    }
+  }
+
+  // Get removed activity titles
+  Future<List<String>> getRemovedActivities() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final removedJson = prefs.getString(_removedActivitiesKey);
+      if (removedJson != null) {
+        final List<dynamic> decoded = json.decode(removedJson);
+        return decoded.cast<String>();
+      }
+    } catch (e) {
+      print('Error loading removed activities: $e');
+    }
+    return [];
+  }
+
+  // Save removed activities
+  Future<void> setRemovedActivities(List<String> removed) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_removedActivitiesKey, json.encode(removed));
+    } catch (e) {
+      print('Error saving removed activities: $e');
+    }
+  }
+
+  // Remove an activity by title
+  Future<void> removeActivityByTitle(String title) async {
+    final removed = await getRemovedActivities();
+    if (!removed.contains(title)) {
+      removed.add(title);
+      await setRemovedActivities(removed);
+    }
+  }
+
+  // Restore a removed activity
+  Future<void> restoreActivity(String title) async {
+    final removed = await getRemovedActivities();
+    removed.remove(title);
+    await setRemovedActivities(removed);
   }
 }

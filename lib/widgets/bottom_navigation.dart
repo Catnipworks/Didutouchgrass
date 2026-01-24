@@ -1,197 +1,6 @@
 import 'package:flutter/material.dart';
-
-class DynamicIslandMenu extends StatefulWidget {
-  final VoidCallback onClose;
-  final Function(String) onMenuItemTapped;
-
-  const DynamicIslandMenu({
-    super.key,
-    required this.onClose,
-    required this.onMenuItemTapped,
-  });
-
-  @override
-  State<DynamicIslandMenu> createState() => _DynamicIslandMenuState();
-}
-
-class _DynamicIslandMenuState extends State<DynamicIslandMenu>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _slideAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _closeMenu() async {
-    await _animationController.reverse();
-    widget.onClose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _slideAnimation,
-      builder: (context, child) {
-        return Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Transform.translate(
-            offset: Offset(0, _slideAnimation.value * 500),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(28),
-                  topRight: Radius.circular(28),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Handle bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: Container(
-                      width: 48,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  // Menu title
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Text(
-                      'MENU',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        fontFamily: 'Courier',
-                        color: Colors.grey.shade900,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Menu items
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      children: [
-                        _buildMenuItem('Settings', Icons.settings, 'settings'),
-                        const SizedBox(height: 16),
-                        _buildMenuItem(
-                          'Custom Activities',
-                          Icons.add_circle,
-                          'custom',
-                        ),
-                        const SizedBox(height: 16),
-                        _buildMenuItem('About', Icons.info, 'about'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Close button / bottom padding
-                  GestureDetector(
-                    onTap: _closeMenu,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey.shade800,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'CLOSE',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'Courier',
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMenuItem(String label, IconData icon, String value) {
-    return GestureDetector(
-      onTap: () {
-        widget.onMenuItemTapped(value);
-        _closeMenu();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade800, width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 24, color: Colors.grey.shade800),
-            const SizedBox(width: 16),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Courier',
-                color: Colors.grey.shade900,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.chevron_right, size: 20, color: Colors.grey.shade600),
-          ],
-        ),
-      ),
-    );
-  }
-}
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class BottomTabBar extends StatelessWidget {
   final int currentIndex;
@@ -205,32 +14,40 @@ class BottomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1)),
+        color: theme.cardColor,
+        border: Border(
+          top: BorderSide(
+            color: theme.borderColor,
+            width: 1,
+          ),
+        ),
       ),
       child: SafeArea(
-        top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildTabItem(0, 'Home', Icons.home, currentIndex, onTabChange),
               _buildTabItem(
-                1,
-                'Stats',
-                Icons.bar_chart,
-                currentIndex,
-                onTabChange,
+                context: context,
+                icon: Icons.bar_chart_outlined,
+                label: 'Stats',
+                index: 0,
               ),
               _buildTabItem(
-                2,
-                'More',
-                Icons.more_horiz,
-                currentIndex,
-                onTabChange,
+                context: context,
+                icon: Icons.apps_outlined,
+                label: 'Activities',
+                index: 1,
+              ),
+              _buildTabItem(
+                context: context,
+                icon: Icons.more_horiz,
+                label: 'More',
+                index: 2,
               ),
             ],
           ),
@@ -239,36 +56,235 @@ class BottomTabBar extends StatelessWidget {
     );
   }
 
-  Widget _buildTabItem(
-    int index,
-    String label,
-    IconData icon,
-    int currentIndex,
-    Function(int) onTap,
-  ) {
-    final isActive = currentIndex == index;
+  Widget _buildTabItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
+    final isSelected = currentIndex == index;
     return GestureDetector(
-      onTap: () => onTap(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 24,
-            color: isActive ? Colors.grey.shade900 : Colors.grey.shade600,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-              fontFamily: 'Courier',
-              color: isActive ? Colors.grey.shade900 : Colors.grey.shade600,
+      onTap: () => onTabChange(index),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? theme.textColor : theme.textColor.withValues(alpha: 0.5),
+              size: 24,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? theme.textColor : theme.textColor.withValues(alpha: 0.5),
+                fontFamily: 'Courier Prime',
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class DynamicIslandMenu extends StatelessWidget {
+  final VoidCallback onClose;
+  final Function(String) onMenuItemTapped;
+
+  const DynamicIslandMenu({
+    super.key,
+    required this.onClose,
+    required this.onMenuItemTapped,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight.isFinite ? constraints.maxHeight : MediaQuery.of(context).size.height,
+          child: Stack(
+            children: [
+              // Background overlay - tapping closes menu
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    onClose();
+                  },
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              // Menu at bottom
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(0),
+                      border: Border.all(
+                        color: theme.borderColor,
+                        width: 3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.borderColor,
+                          offset: const Offset(8, 8),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // X button in top right
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              onClose();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: theme.cardColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: theme.borderColor, width: 2),
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: theme.textColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        _buildMenuItem(
+                          context: context,
+                          icon: Icons.share_outlined,
+                          label: 'Share with Friends',
+                          onTap: () {
+                            onMenuItemTapped('share');
+                            onClose();
+                          },
+                        ),
+                        _buildDivider(context),
+                        _buildMenuItem(
+                          context: context,
+                          icon: Icons.notifications_outlined,
+                          label: 'Notifications',
+                          onTap: () {
+                            onMenuItemTapped('notifications');
+                            onClose();
+                          },
+                        ),
+                        _buildDivider(context),
+                        _buildMenuItem(
+                          context: context,
+                          icon: Icons.palette_outlined,
+                          label: 'Themes',
+                          onTap: () {
+                            onMenuItemTapped('themes');
+                            onClose();
+                          },
+                        ),
+                        _buildDivider(context),
+                        _buildMenuItem(
+                          context: context,
+                          icon: Icons.edit_outlined,
+                          label: 'Add/Edit Activities',
+                          onTap: () {
+                            onMenuItemTapped('add_edit_activities');
+                            onClose();
+                          },
+                        ),
+                        _buildDivider(context),
+                        _buildMenuItem(
+                          context: context,
+                          icon: Icons.info_outline,
+                          label: 'About',
+                          onTap: () {
+                            onMenuItemTapped('about');
+                            onClose();
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: theme.textColor,
+              size: 22,
+            ),
+            const SizedBox(width: 14),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: theme.textColor,
+                fontFamily: 'Courier Prime',
+                decoration: TextDecoration.none,
+                decorationColor: Colors.transparent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      height: 1,
+      color: theme.borderColor.withValues(alpha: 0.3),
     );
   }
 }

@@ -12,7 +12,7 @@ class TimerController extends ChangeNotifier {
   String formatTime(int seconds) {
     final mins = seconds ~/ 60;
     final secs = seconds % 60;
-    return '${mins}:${secs.toString().padLeft(2, '0')}';
+    return '$mins:${secs.toString().padLeft(2, '0')}';
   }
 
   void startTimer() {

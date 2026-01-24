@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../services/notification_service.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,12 +16,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool _notificationsEnabled = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 14, minute: 0);
-  String _frequency = 'once_daily'; // 'once_daily', 'weekends', 'random'
+  String _frequency = 'once_daily'; // 'once_daily', 'weekdays', 'random'
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _scheduleDefaultIfNeeded();
+  }
+
+  Future<void> _scheduleDefaultIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // If notifications are enabled but never scheduled, schedule now
+    if (!prefs.containsKey('notifications_scheduled')) {
+      if (_notificationsEnabled) {
+        await _notificationService.scheduleReminder(_selectedTime, _frequency);
+        await prefs.setBool('notifications_scheduled', true);
+      }
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -70,36 +85,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildDitheredBackground() {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.grey.shade300, Colors.grey.shade400],
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: Opacity(
-              opacity: 0.35,
-              child: CustomPaint(painter: DitherPainter()),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return Scaffold(
       body: Stack(
         children: [
-          _buildDitheredBackground(),
+          Container(color: theme.backgroundColor),
           SafeArea(
             child: Column(
               children: [
@@ -108,158 +100,185 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
                     children: [
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'SETTINGS',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.grey.shade900,
-                            letterSpacing: 1.5,
-                            fontFamily: 'Courier',
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            border: Border.all(color: theme.borderColor, width: 2),
+                            shape: BoxShape.circle,
                           ),
-                          textAlign: TextAlign.center,
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: theme.textColor,
+                            size: 20,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 48),
+                      const Spacer(),
                     ],
                   ),
                 ),
                 // Content
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      // Analog Reminders Section
-                      Text(
-                        'ANALOG REMINDERS',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.grey.shade800,
-                          letterSpacing: 1.2,
-                          fontFamily: 'Courier',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Enable/Disable Toggle
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey.shade800,
-                            width: 2,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            border: Border.all(
+                              color: theme.borderColor,
+                              width: 3.0,
+                            ),
+                            borderRadius: BorderRadius.circular(0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.borderColor,
+                                offset: const Offset(10, 10),
+                                blurRadius: 0,
+                              ),
+                            ],
                           ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Enable Reminders',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade900,
-                                fontFamily: 'Courier',
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Section Title
+                              Text(
+                                'REMINDERS',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: theme.textColor,
+                                  letterSpacing: 1.5,
+                                  fontFamily: 'Courier Prime',
+                                ),
                               ),
-                            ),
-                            Switch(
-                              value: _notificationsEnabled,
-                              onChanged: _toggleNotifications,
-                              activeThumbColor: const Color(0xFF90EE90),
-                              inactiveThumbColor: Colors.grey.shade600,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                              const SizedBox(height: 24),
 
-                      // Time Picker
-                      if (_notificationsEnabled)
-                        Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.grey.shade800,
-                                  width: 2,
-                                ),
-                              ),
-                              child: GestureDetector(
-                                onTap: _selectTime,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Reminder Time',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade900,
-                                        fontFamily: 'Courier',
-                                      ),
+                              // Enable/Disable Toggle
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Enable Reminders',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.textColor,
+                                      fontFamily: 'Courier Prime',
                                     ),
-                                    Text(
-                                      _selectedTime.format(context),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        color: const Color(0xFF90EE90),
-                                        fontFamily: 'Courier',
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                  Switch(
+                                    value: _notificationsEnabled,
+                                    onChanged: _toggleNotifications,
+                                    activeThumbColor: theme.accentColor,
+                                    activeTrackColor: theme.borderColor,
+                                    inactiveThumbColor: theme.textColor.withValues(alpha: 0.4),
+                                    inactiveTrackColor: theme.textColor.withValues(alpha: 0.2),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 16),
 
-                            // Frequency Options
-                            Text(
-                              'FREQUENCY',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.grey.shade700,
-                                letterSpacing: 1,
-                                fontFamily: 'Courier',
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Column(
-                              children: [
-                                _buildFrequencyOption(
-                                  'Once Daily',
-                                  'once_daily',
+                              // Expandable section
+                              if (_notificationsEnabled) ...[
+                                const SizedBox(height: 32),
+
+                                // Divider
+                                Container(
+                                  height: 2,
+                                  color: theme.borderColor,
                                 ),
-                                const SizedBox(height: 8),
-                                _buildFrequencyOption(
-                                  'Weekdays Only',
-                                  'weekdays',
+
+                                const SizedBox(height: 32),
+
+                                // Time Picker
+                                GestureDetector(
+                                  onTap: _selectTime,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                                    decoration: BoxDecoration(
+                                      color: theme.accentColor,
+                                      borderRadius: BorderRadius.circular(0),
+                                      border: Border.all(color: theme.borderColor, width: 3),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            'REMINDER TIME',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w900,
+                                              color: theme.borderColor,
+                                              letterSpacing: 1,
+                                              fontFamily: 'Courier Prime',
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              _selectedTime.format(context),
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w900,
+                                                color: theme.borderColor,
+                                                fontFamily: 'Courier Prime',
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Icon(
+                                              Icons.chevron_right,
+                                              color: theme.borderColor,
+                                              size: 20,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 8),
+
+                                const SizedBox(height: 32),
+
+                                // Frequency Section
+                                Text(
+                                  'FREQUENCY',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: theme.textColor,
+                                    letterSpacing: 1.5,
+                                    fontFamily: 'Courier Prime',
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                _buildFrequencyOption('Once Daily', 'once_daily'),
+                                const SizedBox(height: 12),
+                                _buildFrequencyOption('Weekdays Only', 'weekdays'),
+                                const SizedBox(height: 12),
                                 _buildFrequencyOption('Random Times', 'random'),
                               ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                    ],
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -269,17 +288,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildFrequencyOption(String label, String value) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     final isSelected = _frequency == value;
     return GestureDetector(
       onTap: () => _setFrequency(value),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF90EE90) : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? theme.backgroundColor : theme.cardColor,
+          borderRadius: BorderRadius.circular(0),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1B5E1B) : Colors.grey.shade800,
-            width: 2,
+            color: theme.borderColor,
+            width: 3,
           ),
         ),
         child: Row(
@@ -288,43 +308,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? const Color(0xFF1B5E1B)
-                    : Colors.grey.shade900,
-                fontFamily: 'Courier',
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: theme.textColor,
+                fontFamily: 'Courier Prime',
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check, color: Color(0xFF1B5E1B), size: 20),
+              Icon(
+                Icons.check,
+                color: theme.textColor,
+                size: 20,
+              ),
           ],
         ),
       ),
     );
   }
-}
-
-// Dithered background painter
-class DitherPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final random = math.Random(42);
-    final dotSize = 2.0;
-    final spacing = 6.0;
-
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
-        final isBlack = random.nextBool();
-        final color = isBlack ? Colors.black : Colors.white;
-        final opacity = isBlack ? 0.25 : 0.15;
-        
-        final paint = Paint()..color = color.withOpacity(opacity);
-        canvas.drawCircle(Offset(x, y), dotSize, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(DitherPainter oldDelegate) => false;
 }

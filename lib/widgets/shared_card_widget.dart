@@ -18,7 +18,7 @@ class SharedCardWidget extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade900, width: 3),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             offset: const Offset(8, 8),
           ),
         ],

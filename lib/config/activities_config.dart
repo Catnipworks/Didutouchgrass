@@ -48,19 +48,50 @@ class ActivitiesConfig {
       Activity(
         title: 'Screen Free w/ Friends',
         description:
-            'Get together with friend(s) IRL, try to press the start button at the exact same time, see how long you can go screen free together.',
+            'Get together IRL, press start simultaneously, and see how long you can stay screen-free.',
         duration: '',
       ),
     ];
   }
 
-  // Get all activities (default + custom)
+  // Get all activities respecting user's custom order and removed list
   static Future<List<Activity>> getAllActivities() async {
     final customService = CustomActivitiesService();
     final defaultActivities = getDefaultActivities();
     final customActivities = await customService.loadCustomActivities();
-    
-    // Return default activities + custom activities
-    return [...defaultActivities, ...customActivities];
+    final storedOrder = await customService.getActivityOrder();
+    final removedActivities = await customService.getRemovedActivities();
+
+    // Build a map of all available activities by title
+    final allActivities = <String, Activity>{};
+    for (final a in defaultActivities) {
+      allActivities[a.title] = a;
+    }
+    for (final a in customActivities) {
+      allActivities[a.title] = a;
+    }
+
+    // If no custom order set, use default behavior
+    if (storedOrder.isEmpty) {
+      final result = [...defaultActivities, ...customActivities];
+      return result.where((a) => !removedActivities.contains(a.title)).toList();
+    }
+
+    // Build ordered list from stored order
+    final orderedList = <Activity>[];
+    for (final title in storedOrder) {
+      if (allActivities.containsKey(title) && !removedActivities.contains(title)) {
+        orderedList.add(allActivities[title]!);
+      }
+    }
+
+    // Append any new activities not yet in stored order
+    for (final a in allActivities.values) {
+      if (!storedOrder.contains(a.title) && !removedActivities.contains(a.title)) {
+        orderedList.add(a);
+      }
+    }
+
+    return orderedList;
   }
 }

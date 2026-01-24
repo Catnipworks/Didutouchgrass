@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
-import 'Screens/home_screen.dart';
+import 'package:provider/provider.dart';
+import 'screens/home_screen.dart';
+import 'services/notification_service.dart';
+import 'providers/theme_provider.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  runApp(const TouchGrassApp());
+  // Initialize timezone data
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('America/Denver')); // Mountain Time (Utah)
+  
+  // Initialize the notification service
+  await NotificationService.initialize();
+  
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider()..loadTheme(),
+      child: const TouchGrassApp(),
+    ),
+  );
 }
 
 class TouchGrassApp extends StatelessWidget {
@@ -13,7 +30,7 @@ class TouchGrassApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Touch Grass',
+      title: 'Did U Touch Grass',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
         useMaterial3: true,

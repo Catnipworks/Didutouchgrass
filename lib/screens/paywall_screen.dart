@@ -1,178 +1,238 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/premium_service.dart';
-import '../widgets/shared_card_widget.dart';
+import '../providers/theme_provider.dart';
 
-class PaywallScreen extends StatelessWidget {
+class PaywallScreen extends StatefulWidget {
+  const PaywallScreen({super.key});
+
+  @override
+  State<PaywallScreen> createState() => _PaywallScreenState();
+}
+
+class _PaywallScreenState extends State<PaywallScreen> {
   final PremiumService _premiumService = PremiumService();
-
-  PaywallScreen({super.key});
+  bool _isButtonPressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.grey.shade300,
-              Colors.grey.shade400,
-            ],
-          ),
-        ),
+        color: theme.backgroundColor,
         child: SafeArea(
-          child: Column(
-            children: [
-              // Close button
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close, size: 28, color: Colors.grey.shade800),
-                  padding: const EdgeInsets.all(16),
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: SharedCardWidget(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'LIFETIME ACCESS',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.grey.shade900,
-                              letterSpacing: 2,
-                              fontFamily: 'Courier',
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 32),
-                          _buildFeature('Customizable monthly Zine printouts'),
-                          const SizedBox(height: 16),
-                          _buildFeature('Unlimited activities, lofi themes'),
-                          const SizedBox(height: 16),
-                          _buildFeature('Every future feature included forever'),
-                          const SizedBox(height: 12),
-                          GestureDetector(
-                            onTap: () {
-                              // TODO: Add your roadmap URL here
-                              // You can use url_launcher package to open the link
-                              print('Open roadmap link');
-                            },
-                            child: Text(
-                              'View Roadmap',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey.shade600,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF3D5A3D),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF2A4A2A), width: 2),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Early Access Price',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFFA8C4A8),
-                                    fontFamily: 'Courier',
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '\$4.99',
-                                  style: TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFFE8F5E8),
-                                    fontFamily: 'Courier',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                // TODO: Replace with actual IAP
-                                await _premiumService.unlockPremium();
-                                if (context.mounted) {
-                                  Navigator.pop(context, true);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey.shade700,
-                                foregroundColor: Colors.grey.shade100,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: Colors.grey.shade800, width: 3),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                'UNLOCK PREMIUM',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.5,
-                                  fontFamily: 'Courier',
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    border: Border.all(
+                      color: theme.borderColor,
+                      width: 3.0,
                     ),
+                    borderRadius: BorderRadius.circular(0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.borderColor,
+                        offset: const Offset(8, 8),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(28.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Close button inside card - smaller
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: theme.borderColor, width: 2),
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: theme.textColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'LIFETIME ACCESS',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: theme.textColor,
+                          letterSpacing: 1.5,
+                          fontFamily: 'DotGothic16',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 28),
+                      _buildFeature('Custom Zines', 'Turn your data into monthly physical printouts.'),
+                      const SizedBox(height: 16),
+                      _buildFeature('Full Library', 'Access all current and future activities + themes.'),
+                      const SizedBox(height: 16),
+                      _buildFeature('One-Time Buy', 'Lock in every future update for life.'),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Built by a solo creator. Your support keeps this utility ad-free.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: theme.textColor.withValues(alpha: 0.6),
+                          fontFamily: 'Courier Prime',
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 28),
+                      // Price box
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: theme.backgroundColor,
+                          borderRadius: BorderRadius.circular(0),
+                          border: Border.all(color: theme.borderColor, width: 3),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'EARLY ACCESS PRICE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textColor.withValues(alpha: 0.5),
+                                letterSpacing: 1.5,
+                                fontFamily: 'Courier Prime',
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '\$5.99',
+                              style: TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textColor,
+                                fontFamily: 'Courier Prime',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Green unlock button
+                      GestureDetector(
+                        onTapDown: (_) => setState(() => _isButtonPressed = true),
+                        onTapUp: (_) async {
+                          setState(() => _isButtonPressed = false);
+                          await _premiumService.unlockPremium();
+                          if (context.mounted) {
+                            Navigator.pop(context, true);
+                          }
+                        },
+                        onTapCancel: () => setState(() => _isButtonPressed = false),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 100),
+                          curve: Curves.easeOut,
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          transform: Matrix4.translationValues(
+                            _isButtonPressed ? 4 : 0,
+                            _isButtonPressed ? 4 : 0,
+                            0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.accentColor,
+                            borderRadius: BorderRadius.circular(0),
+                            border: Border.all(color: theme.borderColor, width: 3),
+                            boxShadow: _isButtonPressed
+                                ? []
+                                : [
+                                    BoxShadow(
+                                      color: theme.borderColor,
+                                      offset: const Offset(4, 4),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                          ),
+                          child: Text(
+                            'UNLOCK PREMIUM',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.5,
+                              fontFamily: 'Courier Prime',
+                              color: theme.borderColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFeature(String text) {
+  Widget _buildFeature(String title, String description) {
+    final theme = Provider.of<ThemeProvider>(context).currentTheme;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '✦',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade700,
+        Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Text(
+            '●',
+            style: TextStyle(
+              fontSize: 10,
+              color: theme.textColor.withValues(alpha: 0.5),
+            ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey.shade800,
-              height: 1.4,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textColor,
+                  fontFamily: 'Courier Prime',
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: theme.textColor.withValues(alpha: 0.7),
+                  height: 1.3,
+                  fontFamily: 'Courier Prime',
+                ),
+              ),
+            ],
           ),
         ),
       ],

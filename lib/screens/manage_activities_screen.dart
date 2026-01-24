@@ -354,7 +354,7 @@ class SubtleNoisePainter extends CustomPainter {
         final color = isBlack ? Colors.black : Colors.white;
         final opacity = isBlack ? 0.25 : 0.15;
         
-        final paint = Paint()..color = color.withOpacity(opacity);
+        final paint = Paint()..color = color.withValues(alpha: opacity);
         canvas.drawCircle(Offset(x, y), dotSize, paint);
       }
     }
